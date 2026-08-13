@@ -847,7 +847,8 @@ export default function App() {
 
   const handleSendMessage = async (textToSend, isRetry = false) => {
     const queryText = textToSend || chatInput;
-    if (!queryText.trim()) return;
+    const trimmed = queryText.trim();
+    if (!trimmed || /^[.!?,\s]+$/.test(trimmed)) return;
 
     setChatInput("");
     if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
