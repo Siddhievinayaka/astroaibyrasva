@@ -42,7 +42,18 @@ app.get('/health', (req, res) => {
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 // Fallback all non-API GET requests to client build index.html
-app.get(/^(?!\/api).*$/, (req, res) => {
+app.get('*', (req, res) => {
+  // Don't intercept API endpoints
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // If request looks like a file (contains a dot, e.g. script.js, style.css),
+  // return a 404 instead of falling back to index.html to prevent white screen error
+  if (req.path.includes('.')) {
+    return res.status(404).send('Not Found');
+  }
+
   res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
 
@@ -170,16 +181,17 @@ io.on('connection', (socket) => {
   });
 });
 
-// Database connection & Server start
-console.log('Connecting to MongoDB...');
-mongoose.connect(mongoURI)
-  .then(() => {
-    console.log('Successfully connected to MongoDB.');
-    httpServer.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+// Start server immediately so Render detects it as active
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  
+  // Connect to MongoDB in the background
+  console.log('Connecting to MongoDB...');
+  mongoose.connect(mongoURI)
+    .then(() => {
+      console.log('Successfully connected to MongoDB.');
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
     });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+});
