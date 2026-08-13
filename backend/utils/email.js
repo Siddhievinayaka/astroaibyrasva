@@ -114,6 +114,7 @@ export const sendVisitNotificationEmail = async (visitorDetails) => {
     };
 
     await transporter.sendMail(mailOptions);
+    console.log(`[SMTP] Visit notification email sent successfully to: ${process.env.SMTP_USER}`);
     return true;
   } catch (error) {
     console.error("Error sending visit notification email:", error);

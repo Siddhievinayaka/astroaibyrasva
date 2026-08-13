@@ -93,10 +93,13 @@ io.on('connection', (socket) => {
   socket.on('user_visited', async (userData) => {
     const { sessionId, name, email, mobile } = userData;
     if (!sessionId) return;
+    
+    console.log(`[SOCKET] user_visited event received for sessionId: ${sessionId}, user: ${name || 'Anonymous'}`);
 
     // Send email alert if this is a new session visit
     if (!activeVisits.has(sessionId)) {
       activeVisits.add(sessionId);
+      console.log(`[SOCKET] New unique session detected. Triggering visit email for: ${sessionId}`);
       
       try {
         await sendVisitNotificationEmail({
@@ -109,6 +112,8 @@ io.on('connection', (socket) => {
       } catch (err) {
         console.error('Error sending visit notification email:', err);
       }
+    } else {
+      console.log(`[SOCKET] Session ${sessionId} already recorded as active. Skipping email.`);
     }
 
     // Alert all connected admins
@@ -124,9 +129,12 @@ io.on('connection', (socket) => {
     const { sessionId, userId, text, compatibilityCheck } = msgData;
     if (!sessionId || !text) return;
 
+    console.log(`[SOCKET] user_message event received for sessionId: ${sessionId}`);
+
     // Send visit email if this is a new session that missed the initial visit alert
     if (!activeVisits.has(sessionId)) {
       activeVisits.add(sessionId);
+      console.log(`[SOCKET] New unique session detected on chat message. Triggering backup visit email for: ${sessionId}`);
       
       try {
         let name = 'Anonymous Explorer';
