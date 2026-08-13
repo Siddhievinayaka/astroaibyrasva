@@ -24,17 +24,15 @@ router.post('/signup', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
     let user;
     if (existingUser) {
-      // Overwrite unverified account details
+      // Overwrite unverified account details and mark as verified
       existingUser.name = name;
       existingUser.mobile = mobile;
       existingUser.passwordHash = passwordHash;
-      existingUser.otp = otp;
-      existingUser.otpExpires = otpExpires;
+      existingUser.otp = null;
+      existingUser.otpExpires = null;
+      existingUser.isVerified = true;
       user = await existingUser.save();
     } else {
       user = new User({
@@ -42,28 +40,30 @@ router.post('/signup', async (req, res) => {
         email,
         mobile,
         passwordHash,
-        otp,
-        otpExpires,
-        isVerified: false
+        otp: null,
+        otpExpires: null,
+        isVerified: true
       });
       await user.save();
     }
 
-    // Send OTP email inside a try-catch block
-    try {
-      await sendOTPEmail(email, otp);
-    } catch (emailErr) {
-      console.warn('Signup warning: SMTP email blocked by Render. Logging OTP as fallback.');
-      console.log(`========================================`);
-      console.log(`[VERIFICATION FALLBACK]`);
-      console.log(`User: ${name} (${email})`);
-      console.log(`OTP Code: ${otp}`);
-      console.log(`========================================`);
-    }
+    // Generate JWT token immediately on signup
+    const token = jwt.sign(
+      { id: user._id, email: user.email, name: user.name, role: user.role },
+      jwtSecret,
+      { expiresIn: '7d' }
+    );
 
     res.status(201).json({
-      message: 'Verification OTP sent to your email. Please verify to activate your account.',
-      email: user.email
+      message: 'Account created and verified successfully!',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role
+      }
     });
   } catch (err) {
     console.error('Signup error:', err);

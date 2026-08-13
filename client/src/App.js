@@ -401,8 +401,18 @@ export default function App() {
       const data = await res.json();
       if (res.ok) {
         if (authMode === "signup") {
-          setAuthStep("otp");
-          setAuthError("");
+          localStorage.setItem("gemini_astro_token", data.token);
+          localStorage.setItem("gemini_astro_user", JSON.stringify(data.user));
+          setToken(data.token);
+          setUser(data.user);
+          alert("Account created and verified successfully!");
+          setShowAuthModal(false);
+          setAuthName("");
+          setAuthEmail("");
+          setAuthMobile("");
+          setAuthPassword("");
+          setAuthOtp("");
+          fetchProfiles(data.token);
         } else {
           localStorage.setItem("gemini_astro_token", data.token);
           localStorage.setItem("gemini_astro_user", JSON.stringify(data.user));
