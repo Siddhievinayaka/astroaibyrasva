@@ -201,9 +201,23 @@ export const parseSecondPerson = (text) => {
           month = String(mIdx + 1).padStart(2, '0');
         }
       }
+      
+      // Auto-detect and swap if it's MM/DD/YYYY format (e.g. 05/31/2009)
+      if (!isNaN(day) && !isNaN(month)) {
+        const dVal = parseInt(day);
+        const mVal = parseInt(month);
+        if (mVal > 12 && dVal <= 12) {
+          // Swap them
+          const temp = day;
+          day = month;
+          month = temp;
+        }
+      }
+
       formattedDate = `${parts[2]}-${month}-${day}`;
     } else if (parts[0] && parts[0].length === 4) {
       let month = parts[1].padStart(2, '0');
+      let day = parts[2].padStart(2, '0');
       if (isNaN(parts[1])) {
         const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
         const mIdx = months.findIndex(m => parts[1].toLowerCase().startsWith(m));
@@ -211,7 +225,20 @@ export const parseSecondPerson = (text) => {
           month = String(mIdx + 1).padStart(2, '0');
         }
       }
-      formattedDate = `${parts[0]}-${month}-${parts[2].padStart(2, '0')}`;
+      
+      // Auto-detect and swap if it's YYYY-DD-MM format
+      if (!isNaN(day) && !isNaN(month)) {
+        const dVal = parseInt(day);
+        const mVal = parseInt(month);
+        if (mVal > 12 && dVal <= 12) {
+          // Swap them
+          const temp = day;
+          day = month;
+          month = temp;
+        }
+      }
+
+      formattedDate = `${parts[0]}-${month}-${day}`;
     }
 
     // Format Time to HH:MM (24-hour format)
