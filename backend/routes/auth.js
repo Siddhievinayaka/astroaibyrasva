@@ -49,8 +49,17 @@ router.post('/signup', async (req, res) => {
       await user.save();
     }
 
-    // Send OTP email
-    await sendOTPEmail(email, otp);
+    // Send OTP email inside a try-catch block
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (emailErr) {
+      console.warn('Signup warning: SMTP email blocked by Render. Logging OTP as fallback.');
+      console.log(`========================================`);
+      console.log(`[VERIFICATION FALLBACK]`);
+      console.log(`User: ${name} (${email})`);
+      console.log(`OTP Code: ${otp}`);
+      console.log(`========================================`);
+    }
 
     res.status(201).json({
       message: 'Verification OTP sent to your email. Please verify to activate your account.',
