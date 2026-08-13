@@ -1,0 +1,116 @@
+{
+  "yogas": {
+    "Gaja Kesari Yoga": {
+      "name": "Gaja Kesari Yoga",
+      "description": "Jupiter and Moon in mutual Kendras (1st, 4th, 7th, or 10th from each other). Indicates wisdom, success, wealth, status, and protection from negative transits."
+    },
+    "Budhaditya Yoga": {
+      "name": "Budhaditya Yoga",
+      "description": "Sun and Mercury in the same house. Indicates intelligence, excellent communication, sharp intellect, learning capacity, and professional success."
+    },
+    "Ruchaka Yoga": {
+      "name": "Ruchaka Yoga (Pancha Mahapurusha)",
+      "description": "Mars in a Kendra (1st, 4th, 7th, or 10th) in its own sign (Aries/Scorpio) or exalted sign (Capricorn). Indicates leadership, physical strength, courage, and victory over obstacles."
+    },
+    "Bhadra Yoga": {
+      "name": "Bhadra Yoga (Pancha Mahapurusha)",
+      "description": "Mercury in a Kendra in its own/exalted sign (Gemini/Virgo). Indicates high intelligence, mercantile success, business acumen, and eloquence."
+    },
+    "Hamsa Yoga": {
+      "name": "Hamsa Yoga (Pancha Mahapurusha)",
+      "description": "Jupiter in a Kendra in its own sign (Sagittarius/Pisces) or exalted sign (Cancer). Indicates spiritual wisdom, righteousness, pure character, and societal honor."
+    },
+    "Malavya Yoga": {
+      "name": "Malavya Yoga (Pancha Mahapurusha)",
+      "description": "Venus in a Kendra in its own sign (Taurus/Libra) or exalted sign (Pisces). Indicates luxury, artistic abilities, happy relationships, charm, and high comfort in life."
+    },
+    "Sasa Yoga": {
+      "name": "Sasa Yoga (Pancha Mahapurusha)",
+      "description": "Saturn in a Kendra in its own sign (Capricorn/Aquarius) or exalted sign (Libra). Indicates patience, organization, political or administrative power, and long-term achievements."
+    },
+    "Kala Sarpa Yoga": {
+      "name": "Kala Sarpa Yoga",
+      "description": "All planets are hemmed between Rahu and Ketu in the chart. Indicates intense cycles, early life struggles, followed by unexpected rises or transformations."
+    }
+  },
+  "lalkitab": {
+    "Sun": {
+      "house_1": {
+        "prediction": "Sun in House 1 makes the native a self-made leader, resembling a king. They will earn status, respect, and have strong self-dignity. If afflicted, it can cause ego issues.",
+        "remedies": ["Offer copper-infused water to the rising Sun daily", "Never tell lies", "Do not accept charity"]
+      },
+      "house_2": {
+        "prediction": "Sun in House 2 is highly auspicious for family wealth, speech, and state support. The native will be generous but may have an assertive voice.",
+        "remedies": ["Donate coconut or mustard oil at a temple", "Avoid arguments with family", "Keep a gold or copper coin in your locker"]
+      },
+      "house_3": {
+        "prediction": "Sun in House 3 makes the native brave, hard-working, and respected by siblings and neighbors. They excel in travel or writing.",
+        "remedies": ["Maintain good relations with maternal uncles", "Do not speak ill of others", "Feed sweet bread (roti) to dogs"]
+      },
+      "house_4": {
+        "prediction": "Sun in House 4 governs peace, property, and happiness. If afflicted, it may cause disturbances in domestic life or maternal health.",
+        "remedies": ["Do not construct a kitchen next to the main gate", "Feed blind people or do charity in dark rooms", "Never speak harshly to your mother"]
+      },
+      "house_5": {
+        "prediction": "Sun in House 5 is highly beneficial for intellect, children, and creative fame. It indicates gains from state authorities.",
+        "remedies": ["Keep a red handkerchief in your pocket", "Never criticize spiritual teachers", "Donate sweets to children"]
+      },
+      "house_6": {
+        "prediction": "Sun in House 6 ensures victory over enemies, health recovery, and success in service. The native is extremely detailed and organized.",
+        "remedies": ["Keep water in a copper vessel at your bedside overnight and pour it on a plant in the morning", "Feed black dogs", "Avoid disputes with coworkers"]
+      },
+      "house_7": {
+        "prediction": "Sun in House 7 can cause conflict in relationships, partnerships, and public dealings due to clash of egos.",
+        "remedies": ["Start any work after drinking a sip of water", "Keep a small piece of silver in your wallet", "Do not be excessively domineering with partners"]
+      },
+      "house_8": {
+        "prediction": "Sun in House 8 indicates sudden transformations, occult learning, but can cause general health issues or secret enemies.",
+        "remedies": ["Do not live in a house facing south", "Throw copper coins in flowing water", "Donate wheat or copper at religious places"]
+      },
+      "house_9": {
+        "prediction": "Sun in House 9 is excellent for higher learning, fortune, spiritual development, and support from elders/father.",
+        "remedies": ["Take blessings from your father daily", "Keep brass vessels in your kitchen", "Do not accept silver items as gifts"]
+      },
+      "house_10": {
+        "prediction": "Sun in House 10 is at its highest dignity. It indicates government jobs, administrative leadership, huge career success, and public honor.",
+        "remedies": ["Wear a copper ring on your ring finger", "Never wear blue or black clothes on important days", "Do not criticize state authorities"]
+      },
+      "house_11": {
+        "prediction": "Sun in House 11 yields massive financial gains, multiple sources of income, and support from high-status friends.",
+        "remedies": ["Donate almonds or oil at places of worship", "Keep your promises", "Avoid ego clashes with elder siblings"]
+      },
+      "house_12": {
+        "prediction": "Sun in House 12 indicates expenses, isolation, foreign travel, and strong spiritual inclinations. Native may experience sleep issues.",
+        "remedies": ["Keep a bowl of water in your bedroom at night and dump it outside in the morning", "Be honest in tax dealings", "Help visually impaired people"]
+      }
+    },
+    "Moon": {
+      "house_1": {
+        "prediction": "Moon in House 1 yields a highly sensitive, imaginative, and attractive personality. Native is deeply attached to their mother.",
+        "remedies": ["Avoid drinking milk at night", "Take silver items from your mother as a blessing", "Avoid emotional decision-making"]
+      },
+      "house_6": {
+        "prediction": "Moon in House 6 indicates fluctuating health, emotional stress from debt or service work, but gives strong service-oriented mind.",
+        "remedies": ["Do not distribute free milk or water", "Serve elderly women or maternal aunts", "Do not drink milk from outside sources at night"]
+      }
+    },
+    "Saturn": {
+      "house_6": {
+        "prediction": "Saturn in House 6 is very strong. It destroys enemies, guarantees win in court cases, and makes the native highly disciplined in labor.",
+        "remedies": ["Feed black dogs or crows", "Serve shoes or leather items to workers", "Do not buy leather items on Saturdays"]
+      }
+    },
+    "Rahu": {
+      "house_3": {
+        "prediction": "Rahu in House 3 makes the native highly courageous, clever, and innovative in digital communication. It brings sudden gains.",
+        "remedies": ["Keep a solid silver ball in your pocket", "Avoid fighting with younger siblings", "Maintain clean writing instruments"]
+      }
+    },
+    "Ketu": {
+      "house_9": {
+        "prediction": "Ketu in House 9 is highly spiritual. It grants deep mystical wisdom, detachment, interest in pilgrim travel, and intuition.",
+        "remedies": ["Keep a gold item in the house", "Wear a saffron tilak on the forehead", "Maintain good relations with your son or nephew"]
+      }
+    }
+  }
+}
