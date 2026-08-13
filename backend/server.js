@@ -42,10 +42,15 @@ app.get('/health', (req, res) => {
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 // Fallback all non-API GET requests to client build index.html
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
   // Don't intercept API endpoints
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'API endpoint not found' });
+  }
+
+  // Don't intercept socket.io requests - let socket.io handle them
+  if (req.path.startsWith('/socket.io')) {
+    return next();
   }
   
   // If request looks like a file (contains a dot, e.g. script.js, style.css),
