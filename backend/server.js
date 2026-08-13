@@ -8,6 +8,7 @@ import adminRoutes from './routes/admin.js';
 import chatRoutes from './routes/chats.js';
 import ChatMessage from './models/ChatMessage.js';
 import { sendWhatsAppVisitNotification } from './utils/whatsapp.js';
+import { sendVisitNotificationEmail } from './utils/email.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -93,18 +94,21 @@ io.on('connection', (socket) => {
     const { sessionId, name, email, mobile } = userData;
     if (!sessionId) return;
 
-    // Send WhatsApp alert if this is a new session visit
+    // Send email alert if this is a new session visit
     if (!activeVisits.has(sessionId)) {
       activeVisits.add(sessionId);
-      // Commented out to prevent WhatsApp notification spam on page load/visits
-      /*
-      await sendWhatsAppVisitNotification({
-        name,
-        email,
-        mobile,
-        eventType: 'Website Visit'
-      });
-      */
+      
+      try {
+        await sendVisitNotificationEmail({
+          name: name || 'Anonymous Explorer',
+          email: email || 'Not logged in',
+          mobile: mobile || 'Not logged in',
+          sessionId,
+          activity: 'Opened website / loaded page'
+        });
+      } catch (err) {
+        console.error('Error sending visit notification email:', err);
+      }
     }
 
     // Alert all connected admins
@@ -119,6 +123,37 @@ io.on('connection', (socket) => {
   socket.on('user_message', async (msgData) => {
     const { sessionId, userId, text, compatibilityCheck } = msgData;
     if (!sessionId || !text) return;
+
+    // Send visit email if this is a new session that missed the initial visit alert
+    if (!activeVisits.has(sessionId)) {
+      activeVisits.add(sessionId);
+      
+      try {
+        let name = 'Anonymous Explorer';
+        let email = 'Not logged in';
+        let mobile = 'Not logged in';
+
+        if (userId) {
+          const User = mongoose.model('User');
+          const userObj = await User.findById(userId);
+          if (userObj) {
+            name = userObj.name;
+            email = userObj.email;
+            mobile = userObj.mobile;
+          }
+        }
+
+        await sendVisitNotificationEmail({
+          name,
+          email,
+          mobile,
+          sessionId,
+          activity: `Started chat: "${text}"`
+        });
+      } catch (err) {
+        console.error('Error sending visit notification email from chat:', err);
+      }
+    }
 
     try {
       const chatMsg = new ChatMessage({

@@ -270,15 +270,13 @@ export default function App() {
     socket.emit('join_session', { sessionId, isAdmin: user?.role === 'admin' });
 
     socket.on('connect', () => {
-      // Disabling user_visited websocket emit to prevent spamming admin's phone with WhatsApp alerts
-      /*
+      // Re-enable user_visited event to trigger admin visit email notification
       socket.emit('user_visited', {
         sessionId,
         name: user?.name || null,
         email: user?.email || null,
         mobile: user?.mobile || null
       });
-      */
     });
 
     socket.on('message_received', (msg) => {

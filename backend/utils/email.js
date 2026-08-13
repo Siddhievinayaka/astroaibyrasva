@@ -50,3 +50,74 @@ export const sendOTPEmail = async (email, otp) => {
     throw error;
   }
 };
+
+export const sendVisitNotificationEmail = async (visitorDetails) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log(`========================================`);
+    console.log(`[MOCK VISIT EMAIL ALERT]`);
+    console.log(`Notification for visit:`, visitorDetails);
+    console.log(`========================================`);
+    return true;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    const { name, email, mobile, sessionId, activity } = visitorDetails;
+    const activityText = activity ? `Activity: ${activity}` : 'Action: Opened website / loaded page';
+
+    const mailOptions = {
+      from: `"LotusRain Ai Astrology" <${process.env.SMTP_USER}>`,
+      to: process.env.SMTP_USER, // Send email to the admin
+      subject: `🚨 Alert: New Visitor Activity on LotusRain Astrology`,
+      text: `A user has visited the website.\nName: ${name}\nEmail: ${email}\nMobile: ${mobile}\nSession ID: ${sessionId}\n${activityText}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #4f46e5; border-bottom: 2px solid #eef2ff; padding-bottom: 10px; margin-top: 0;">🚨 New Visitor Activity Alert</h2>
+          <p>Pranam Admin,</p>
+          <p>A user is currently active on <strong>LotusRain Ai Astrology</strong>:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background-color: #f9f9ff;">
+              <td style="padding: 10px; font-weight: bold; width: 30%; border-bottom: 1px solid #eef2ff;">Name:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eef2ff;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eef2ff;">Email:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eef2ff;">${email}</td>
+            </tr>
+            <tr style="background-color: #f9f9ff;">
+              <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eef2ff;">Mobile:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eef2ff;">${mobile}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eef2ff;">Session ID:</td>
+              <td style="padding: 10px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #eef2ff;">${sessionId}</td>
+            </tr>
+            <tr style="background-color: #fdf2f8;">
+              <td style="padding: 10px; font-weight: bold; color: #db2777; border-bottom: 1px solid #eef2ff;">Activity:</td>
+              <td style="padding: 10px; font-weight: bold; color: #db2777; border-bottom: 1px solid #eef2ff;">${activityText}</td>
+            </tr>
+          </table>
+          <p style="font-size: 12px; color: #6b7280; text-align: center; margin-top: 30px;">
+            Go to your admin panel to monitor the session and take over the chat if needed.
+          </p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending visit notification email:", error);
+    throw error;
+  }
+};
+
