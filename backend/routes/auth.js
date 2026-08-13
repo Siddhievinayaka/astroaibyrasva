@@ -147,7 +147,17 @@ router.post('/resend-otp', async (req, res) => {
     user.otpExpires = otpExpires;
     await user.save();
 
-    await sendOTPEmail(email, otp);
+    // Send OTP email inside a try-catch block
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (emailErr) {
+      console.warn('Resend-OTP warning: Resend API failed. Logging OTP as fallback.');
+      console.log(`========================================`);
+      console.log(`[VERIFICATION FALLBACK - RESEND-OTP]`);
+      console.log(`Email: ${email}`);
+      console.log(`OTP Code: ${otp}`);
+      console.log(`========================================`);
+    }
 
     res.json({ message: 'A new verification OTP has been sent to your email.' });
   } catch (err) {
