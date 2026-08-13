@@ -63,7 +63,7 @@ export const sendVisitNotificationEmail = async (visitorDetails) => {
 
     // Send the alert email to the admin. 
     // In free sandboxed Resend accounts, this must match the account owner's email address.
-    const destinationEmail = process.env.ADMIN_ALERT_EMAIL || 'entp7w631@gmail.com'; 
+    const destinationEmail = process.env.ADMIN_ALERT_EMAIL || 'cowstudio.ai@gmail.com'; 
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
