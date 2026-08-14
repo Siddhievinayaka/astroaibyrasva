@@ -847,12 +847,10 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (textToSend, isRetry = false, overrideKey = null, retryCount = 0) => {
+  const handleSendMessage = async (textToSend, isRetry = false) => {
     const queryText = textToSend || chatInput;
     const trimmed = queryText.trim();
     if (!trimmed || /^[.!?,\s]+$/.test(trimmed)) return;
-
-    const activeApiKey = overrideKey || apiKey;
 
     setChatInput("");
     if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
@@ -863,8 +861,8 @@ export default function App() {
     let newSecondPersonInfo = null;
 
     try {
-      // 1. Pre-fetch partner details if matched in current query (skip on retry)
-      if (parsedSecond && !isRetry) {
+      // 1. Pre-fetch partner details if matched in current query
+      if (parsedSecond) {
         const secondData = await getAstroDataForDetails(
           parsedSecond.formattedDate,
           parsedSecond.formattedTime,
@@ -915,7 +913,7 @@ export default function App() {
         compatibilityCheck: newSecondPersonInfo
       });
 
-      if (!activeApiKey) {
+      if (!apiKey) {
         setTimeout(() => {
           const fallbackText = generateLocalPrediction(queryText);
           setChatMessages(prev => [...prev, { role: 'model', text: fallbackText }]);
@@ -1058,7 +1056,7 @@ Directives:
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-goog-api-key': activeApiKey
+          'x-goog-api-key': apiKey
         },
         body: JSON.stringify({
           contents: historyContents,
@@ -1076,25 +1074,6 @@ Directives:
       });
 
       if (!response.ok) {
-        if ((response.status === 429 || response.status === 503 || response.status === 500) && token && retryCount < 5) {
-          console.warn(`Gemini API returned status ${response.status}. Attempting automatic key rotation...`);
-          try {
-            const rotateRes = await fetch(`${API_URL}/api/chats/rotate-key`, {
-              method: 'POST',
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (rotateRes.ok) {
-              const rotateData = await rotateRes.json();
-              if (rotateData.apiKey) {
-                setApiKey(rotateData.apiKey);
-                localStorage.setItem("gemini_astro_apikey", rotateData.apiKey);
-                return handleSendMessage(queryText, true, rotateData.apiKey, retryCount + 1);
-              }
-            }
-          } catch (rotateErr) {
-            console.error("Failed to rotate API key:", rotateErr);
-          }
-        }
         throw new Error(`API returned error ${response.status}: ${response.statusText}`);
       }
 

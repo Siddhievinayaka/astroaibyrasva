@@ -5,40 +5,13 @@ import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Helper to load current keys pool dynamically
-const getKeysPool = () => {
-  const keysStr = process.env.GEMINI_KEYS || process.env.GEMINI_API_KEY || "";
-  return keysStr.split(',').map(k => k.trim()).filter(k => k.length > 0);
-};
-
-let activeKeyIndex = 0;
-
-// GET /api/chats/gemini-key - Fetch active Gemini API Key from pool
+// GET /api/chats/gemini-key - Fetch global Gemini API Key
 router.get('/gemini-key', authMiddleware, async (req, res) => {
   try {
-    const keys = getKeysPool();
-    const activeKey = keys[activeKeyIndex] || "";
-    res.json({ apiKey: activeKey });
+    res.json({ apiKey: process.env.GEMINI_API_KEY || "" });
   } catch (error) {
     console.error("Error retrieving global API key:", error);
     res.status(500).json({ error: "Failed to retrieve configuration." });
-  }
-});
-
-// POST /api/chats/rotate-key - Rotate to the next Gemini API Key
-router.post('/rotate-key', authMiddleware, async (req, res) => {
-  try {
-    const keys = getKeysPool();
-    if (keys.length <= 1) {
-      return res.json({ apiKey: keys[0] || "" });
-    }
-
-    activeKeyIndex = (activeKeyIndex + 1) % keys.length;
-    console.log(`[KEY ROTATION] API Key rotated to index ${activeKeyIndex} (ending in ...${keys[activeKeyIndex].slice(-6)}) due to rate limits.`);
-    res.json({ apiKey: keys[activeKeyIndex] });
-  } catch (error) {
-    console.error("Error rotating API key:", error);
-    res.status(500).json({ error: "Failed to rotate configuration." });
   }
 });
 
