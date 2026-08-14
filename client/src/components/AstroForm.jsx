@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar, Clock, MapPin, Sparkles } from 'lucide-react';
+import { User, Calendar, Clock, MapPin, Sparkles, BookOpen } from 'lucide-react';
 import { CITY_PRESETS } from '../utils/astrologyEngine';
 
 export default function AstroForm({
@@ -13,7 +13,8 @@ export default function AstroForm({
   setSelectedPresetIndex,
   handleLocationSearch,
   loading,
-  handleSubmit
+  handleSubmit,
+  onSaveProfile
 }) {
   return (
     <div className="glass-card rounded-2xl p-5 border border-indigo-500/15">
@@ -178,21 +179,31 @@ export default function AstroForm({
           </div>
         </div>
 
-        {/* Submit */}
-        <button 
-          type="submit"
-          disabled={loading}
-          className="w-full mt-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-indigo-500/10 active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          {loading ? (
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Calculate Vedic Kundali
-            </>
-          )}
-        </button>
+        {/* Actions */}
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <button 
+            type="submit"
+            disabled={loading}
+            className="py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-indigo-500/10 active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Calculate Chart
+              </>
+            )}
+          </button>
+          <button 
+            type="button"
+            onClick={onSaveProfile}
+            className="py-3 border border-indigo-500/35 hover:bg-indigo-500/10 text-indigo-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4" />
+            Save Profile
+          </button>
+        </div>
       </form>
     </div>
   );

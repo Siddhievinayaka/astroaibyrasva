@@ -775,6 +775,7 @@ export default function App() {
         return;
       }
       setSavedProfiles(prev => [...prev, payload]);
+      alert("Profile saved successfully to Local Storage!");
       return;
     }
 
@@ -790,6 +791,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setSavedProfiles(prev => [data, ...prev]);
+        alert("Profile saved successfully to Database!");
       } else {
         const errData = await res.json();
         alert(`Error: ${errData.error}`);
@@ -1222,6 +1224,7 @@ Directives:
             handleLocationSearch={handleLocationSearch}
             loading={loading}
             handleSubmit={(e) => { e.preventDefault(); calculateChart(profile); }}
+            onSaveProfile={saveProfile}
           />
 
           <SavedProfiles 
