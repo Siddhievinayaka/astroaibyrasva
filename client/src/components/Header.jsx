@@ -24,7 +24,7 @@ export default function Header({
           <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-amber-400 via-purple-300 to-indigo-300 bg-clip-text text-transparent">RaSva AI Astrology</h1>
           <p className="text-xs text-slate-400 font-light flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            ENTP 7w6 Ai Astrology, Personal Advisor for Jotish Enthusiast
+            Personal Advisor for Jotish Enthusiast
           </p>
         </div>
       </div>
