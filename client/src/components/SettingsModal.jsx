@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, AlertCircle } from 'lucide-react';
 
 export default function SettingsModal({
@@ -12,6 +12,19 @@ export default function SettingsModal({
   const [localKey, setLocalKey] = useState(apiKey);
   const [localModel, setLocalModel] = useState(model);
   const [localBase, setLocalBase] = useState(apiBase);
+
+  // Synchronize local state with props when they are asynchronously loaded
+  useEffect(() => {
+    setLocalKey(apiKey);
+  }, [apiKey]);
+
+  useEffect(() => {
+    setLocalModel(model);
+  }, [model]);
+
+  useEffect(() => {
+    setLocalBase(apiBase);
+  }, [apiBase]);
 
   if (!showSettings) return null;
 
