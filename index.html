@@ -1477,10 +1477,12 @@
       };
 
       // Chat submission logic
-      const handleSendMessage = async (textToSend, isRetry = false) => {
+      const handleSendMessage = async (textToSend, isRetry = false, overrideKey = null) => {
         const queryText = textToSend || chatInput;
         const trimmed = queryText.trim();
         if (!trimmed || /^[.!?,\s]+$/.test(trimmed)) return;
+
+        const activeApiKey = overrideKey || apiKey;
 
         if (isRetry) {
           // Remove previous error bubble
@@ -1517,7 +1519,7 @@
           } : null
         });
 
-        if (!apiKey) {
+        if (!activeApiKey) {
           // If no API Key, reply with simulated local rules
           setTimeout(() => {
             const fallbackText = generateLocalPrediction(queryText);
@@ -1649,7 +1651,7 @@ User Query: "${queryText}"`;
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
+              'x-goog-api-key': activeApiKey
             },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: systemPrompt }] }],
@@ -1664,6 +1666,25 @@ User Query: "${queryText}"`;
           });
 
           if (!response.ok) {
+            if (response.status === 429 && token) {
+              console.warn("Gemini API returned 429. Attempting automatic key rotation...");
+              try {
+                const rotateRes = await fetch(`${API_URL}/api/chats/rotate-key`, {
+                  method: 'POST',
+                  headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (rotateRes.ok) {
+                  const rotateData = await rotateRes.json();
+                  if (rotateData.apiKey) {
+                    setApiKey(rotateData.apiKey);
+                    localStorage.setItem("gemini_astro_apikey", rotateData.apiKey);
+                    return handleSendMessage(queryText, true, rotateData.apiKey);
+                  }
+                }
+              } catch (rotateErr) {
+                console.error("Failed to rotate API key:", rotateErr);
+              }
+            }
             throw new Error(`API returned error ${response.status}: ${response.statusText}`);
           }
 

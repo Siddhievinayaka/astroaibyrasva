@@ -845,10 +845,12 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (textToSend, isRetry = false) => {
+  const handleSendMessage = async (textToSend, isRetry = false, overrideKey = null) => {
     const queryText = textToSend || chatInput;
     const trimmed = queryText.trim();
     if (!trimmed || /^[.!?,\s]+$/.test(trimmed)) return;
+
+    const activeApiKey = overrideKey || apiKey;
 
     setChatInput("");
     if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
@@ -911,7 +913,7 @@ export default function App() {
         compatibilityCheck: newSecondPersonInfo
       });
 
-      if (!apiKey) {
+      if (!activeApiKey) {
         setTimeout(() => {
           const fallbackText = generateLocalPrediction(queryText);
           setChatMessages(prev => [...prev, { role: 'model', text: fallbackText }]);
@@ -1054,7 +1056,7 @@ Directives:
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
+          'x-goog-api-key': activeApiKey
         },
         body: JSON.stringify({
           contents: historyContents,
@@ -1072,6 +1074,25 @@ Directives:
       });
 
       if (!response.ok) {
+        if (response.status === 429 && token) {
+          console.warn("Gemini API returned 429. Attempting automatic key rotation...");
+          try {
+            const rotateRes = await fetch(`${API_URL}/api/chats/rotate-key`, {
+              method: 'POST',
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (rotateRes.ok) {
+              const rotateData = await rotateRes.json();
+              if (rotateData.apiKey) {
+                setApiKey(rotateData.apiKey);
+                localStorage.setItem("gemini_astro_apikey", rotateData.apiKey);
+                return handleSendMessage(queryText, true, rotateData.apiKey);
+              }
+            }
+          } catch (rotateErr) {
+            console.error("Failed to rotate API key:", rotateErr);
+          }
+        }
         throw new Error(`API returned error ${response.status}: ${response.statusText}`);
       }
 
