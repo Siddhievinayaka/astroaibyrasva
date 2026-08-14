@@ -26,7 +26,7 @@ export default function AdminPanel({
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-6 h-6 text-purple-400 animate-pulse" />
             <div>
-              <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">RaSva AI Astrology - Admin Control Panel</h2>
+              <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">Green AI Astrology - Admin Control Panel</h2>
               <p className="text-[10px] text-slate-400 font-light">Monitor user live chat sessions, check registrations, and takeover chat threads.</p>
             </div>
           </div>

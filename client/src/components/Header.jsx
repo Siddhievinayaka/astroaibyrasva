@@ -21,7 +21,7 @@ export default function Header({
           <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-slate-900"></div>
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-amber-400 via-purple-300 to-indigo-300 bg-clip-text text-transparent">RaSva AI Astrology</h1>
+          <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-amber-400 via-purple-300 to-indigo-300 bg-clip-text text-transparent">Green AI Astrology</h1>
           <p className="text-xs text-slate-400 font-light flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             Personal Advisor for Jotish Enthusiast
