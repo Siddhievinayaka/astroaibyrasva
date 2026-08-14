@@ -847,7 +847,7 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (textToSend, isRetry = false, overrideKey = null) => {
+  const handleSendMessage = async (textToSend, isRetry = false, overrideKey = null, retryCount = 0) => {
     const queryText = textToSend || chatInput;
     const trimmed = queryText.trim();
     if (!trimmed || /^[.!?,\s]+$/.test(trimmed)) return;
@@ -863,8 +863,8 @@ export default function App() {
     let newSecondPersonInfo = null;
 
     try {
-      // 1. Pre-fetch partner details if matched in current query
-      if (parsedSecond) {
+      // 1. Pre-fetch partner details if matched in current query (skip on retry)
+      if (parsedSecond && !isRetry) {
         const secondData = await getAstroDataForDetails(
           parsedSecond.formattedDate,
           parsedSecond.formattedTime,
@@ -1076,7 +1076,7 @@ Directives:
       });
 
       if (!response.ok) {
-        if ((response.status === 429 || response.status === 503 || response.status === 500) && token) {
+        if ((response.status === 429 || response.status === 503 || response.status === 500) && token && retryCount < 5) {
           console.warn(`Gemini API returned status ${response.status}. Attempting automatic key rotation...`);
           try {
             const rotateRes = await fetch(`${API_URL}/api/chats/rotate-key`, {
@@ -1088,7 +1088,7 @@ Directives:
               if (rotateData.apiKey) {
                 setApiKey(rotateData.apiKey);
                 localStorage.setItem("gemini_astro_apikey", rotateData.apiKey);
-                return handleSendMessage(queryText, true, rotateData.apiKey);
+                return handleSendMessage(queryText, true, rotateData.apiKey, retryCount + 1);
               }
             }
           } catch (rotateErr) {
