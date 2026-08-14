@@ -1666,8 +1666,8 @@ User Query: "${queryText}"`;
           });
 
           if (!response.ok) {
-            if (response.status === 429 && token) {
-              console.warn("Gemini API returned 429. Attempting automatic key rotation...");
+            if ((response.status === 429 || response.status === 503 || response.status === 500) && token) {
+              console.warn(`Gemini API returned status ${response.status}. Attempting automatic key rotation...`);
               try {
                 const rotateRes = await fetch(`${API_URL}/api/chats/rotate-key`, {
                   method: 'POST',
