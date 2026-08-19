@@ -7,6 +7,8 @@ import profileRoutes from './routes/profiles.js';
 import adminRoutes from './routes/admin.js';
 import chatRoutes from './routes/chats.js';
 import ChatMessage from './models/ChatMessage.js';
+import ApiKey from './models/ApiKey.js';
+
 import { sendWhatsAppVisitNotification } from './utils/whatsapp.js';
 import { sendVisitNotificationEmail } from './utils/email.js';
 

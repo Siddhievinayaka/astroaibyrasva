@@ -2,6 +2,8 @@ import express from 'express';
 import User from '../models/User.js';
 import ChatMessage from '../models/ChatMessage.js';
 import authMiddleware from '../middleware/auth.js';
+import ApiKey from '../models/ApiKey.js';
+
 
 const router = express.Router();
 
@@ -94,4 +96,46 @@ router.get('/chats/:sessionId', authMiddleware, verifyAdmin, async (req, res) =>
   }
 });
 
+// GET /api/admin/apikeys - List all API keys
+router.get('/apikeys', authMiddleware, verifyAdmin, async (req, res) => {
+  try {
+    const keys = await ApiKey.find({}).sort({ createdAt: -1 });
+    res.json(keys);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching API keys.' });
+  }
+});
+
+// POST /api/admin/apikeys - Add a new API key
+router.post('/apikeys', authMiddleware, verifyAdmin, async (req, res) => {
+  try {
+    const { key, label } = req.body;
+    if (!key) {
+      return res.status(400).json({ error: 'API key is required.' });
+    }
+    const newKey = new ApiKey({ key, label });
+    await newKey.save();
+    res.json(newKey);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'This API key has already been added.' });
+    }
+    res.status(500).json({ error: 'Error adding API key.' });
+  }
+});
+
+// DELETE /api/admin/apikeys/:id - Delete an API key
+router.delete('/apikeys/:id', authMiddleware, verifyAdmin, async (req, res) => {
+  try {
+    const deleted = await ApiKey.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'API key not found.' });
+    }
+    res.json({ message: 'API key deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting API key.' });
+  }
+});
+
 export default router;
+

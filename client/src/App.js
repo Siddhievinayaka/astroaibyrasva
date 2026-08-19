@@ -134,8 +134,36 @@ export default function App() {
   const [apiBase, setApiBase] = useState(() => localStorage.getItem("gemini_astro_api_base") || "https://generativelanguage.googleapis.com");
   const [model, setModel] = useState(() => localStorage.getItem("gemini_astro_model") || "gemini-3.5-flash");
   const [suggestedKeyWarning, setSuggestedKeyWarning] = useState(!localStorage.getItem("gemini_astro_apikey"));
+  const [availableKeys, setAvailableKeys] = useState([]);
+
+  const fetchAvailableKeys = async (userToken) => {
+    const activeToken = userToken || token;
+    if (!activeToken) {
+      setAvailableKeys([]);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/chats/gemini-keys`, {
+        headers: { "Authorization": `Bearer ${activeToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableKeys(data);
+        
+        // Fallback: if apiKey state is empty, set it to the first key in the list
+        const savedKey = localStorage.getItem("gemini_astro_apikey");
+        if (!savedKey && data.length > 0) {
+          setApiKey(data[0].key);
+          setSuggestedKeyWarning(false);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching Gemini API keys list:", err);
+    }
+  };
 
   const chatEndRef = useRef(null);
+
   const chatInputRef = useRef(null);
 
   // Geocoder Auto Suggestions
@@ -248,19 +276,10 @@ export default function App() {
     fetchProfiles();
     fetchUserSessions();
     if (token) {
-      fetch(`${API_URL}/api/chats/gemini-key`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.apiKey) {
-          setApiKey(data.apiKey);
-          setSuggestedKeyWarning(false);
-        }
-      })
-      .catch(err => console.error("Error loading default API key:", err));
+      fetchAvailableKeys(token);
     }
   }, [token]);
+
 
   // Socket setup
   useEffect(() => {
@@ -1036,7 +1055,7 @@ ${lkRemediesText}
         historyContents.push({ role: 'user', parts: [{ text: queryText }] });
       }
 
-      const currentDateText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const currentDateText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       const systemInstructionText = `You are a highly premium, intuitive, and accurate ENTP 7w6 Vedic AI Astrologer named "Cosmic Guru".
 You advise a user interested in Jyotish.
 You strictly ground your predictions in the Sidereal planetary coordinates, Vedic Yogas, and Lal Kitab placements provided below.
@@ -1048,9 +1067,13 @@ ${chartContext}
 ${secondPersonContext ? `The user has loaded compatibility details for a second person:\n${secondPersonContext}` : ""}
 
 Directives:
-1. Provide highly specific advice using the active Yogas and Lal Kitab remedies. Keep replies premium, deep, and astrological.
-2. If compatibility details of a second person are loaded, ALWAYS keep this second person's details in mind throughout the entire conversation, referencing them when relevant, comparing their placements to the user's, and providing insights about their dynamics (e.g. element matches, Lagna compatibility, Nakshatra compatibility).
-3. Keep formatting clean with bullet points and bold highlights. Avoid long blocks of generic warnings.`;
+1. House Placements & Numbering Rules:
+   - Always refer to standard Vedic houses using the exact "located in House X" index provided in the birth profile context. Do NOT recalculate or subtract sign indices yourself, as house indices are 1-based (e.g. Cancer Lagna is House 1, so Scorpio is House 5. Refer to Scorpio placements as the 5th House, never the 4th House).
+   - Distinguish standard Vedic Houses (which are Lagna-relative) from Lal Kitab Houses (which are Sign-relative, where Rashi number equals house number, e.g. Scorpio is Lal Kitab House 8). Clearly specify which system you are referencing so the user is not confused.
+2. Predictive Precision: You must provide real, open, and unrestricted astrological predictions. Do not speak in vague, general advice or offer generic disclaimers. Use the specific coordinates, Nakshatras, Lagna placements, and Lal Kitab remedies provided in the context to make concrete, authentic astrological assertions. Be direct, professional, and clear about planetary trends.
+3. Provide highly specific advice using the active Yogas and Lal Kitab remedies. Keep replies premium, deep, and astrological.
+4. If compatibility details of a second person are loaded, ALWAYS keep this second person's details in mind throughout the entire conversation, referencing them when relevant, comparing their placements to the user's, and providing insights about their dynamics (e.g. element matches, Lagna compatibility, Nakshatra compatibility).
+5. Keep formatting clean with bullet points and bold highlights. Avoid long blocks of generic warnings.`;
 
       const response = await fetch(`${apiBase}/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
         method: 'POST',
@@ -1084,14 +1107,17 @@ Directives:
 
       setChatMessages(prev => [...prev, { role: 'model', text: "" }]);
 
-      const parseAndAppendChunk = (line) => {
+            const parseAndAppendChunk = (line) => {
         const cleaned = line.trim();
         if (cleaned.startsWith('data: ')) {
           const dataStr = cleaned.substring(6).trim();
           if (dataStr === '[DONE]') return;
           try {
             const json = JSON.parse(dataStr);
-            const textChunk = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const candidate = json.candidates?.[0];
+            const textChunk = candidate?.content?.parts?.[0]?.text || '';
+            const finishReason = candidate?.finishReason;
+
             if (textChunk) {
               accumulatedText += textChunk;
               setChatMessages(prev => {
@@ -1101,6 +1127,27 @@ Directives:
                   updated[lastIdx] = {
                     ...updated[lastIdx],
                     text: updated[lastIdx].text + textChunk
+                  };
+                }
+                return updated;
+              });
+            }
+
+            if (finishReason && finishReason !== "STOP" && finishReason !== "MAX_TOKENS") {
+              let reasonWarning = "";
+              if (finishReason === "SAFETY") {
+                reasonWarning = "\n\n[⚠️ Note: Cosmic Guru's response was paused here by safety filters due to sensitive topics in the query. You may rephrase or choose another topic to continue.]";
+              } else {
+                reasonWarning = `\n\n[⚠️ Note: Response paused due to finish reason: ${finishReason}]`;
+              }
+              accumulatedText += reasonWarning;
+              setChatMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (lastIdx >= 0 && updated[lastIdx].role === 'model') {
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    text: updated[lastIdx].text + reasonWarning
                   };
                 }
                 return updated;
@@ -1133,6 +1180,11 @@ Directives:
     } catch (e) {
       console.error(e);
       let errorText = "⚠️ Error contacting Gemini API. Please check your API key settings.";
+      if (e.message.includes("429")) {
+        errorText = "⚠️ Gemini API Rate Limit Exceeded (Too Many Requests). Kindly change your API key from the Settings (⚙️) menu to rotate keys and continue the conversation.";
+      } else if (e.message.includes("403")) {
+        errorText = "⚠️ Gemini API Access Forbidden. Kindly change your API key from the Settings (⚙️) menu to rotate keys.";
+      }
       setChatMessages(prev => [...prev, { role: 'model', text: errorText, isError: true, retryText: queryText }]);
     } finally {
       setIsSending(false);
@@ -1740,6 +1792,8 @@ Directives:
         adminChatInput={adminChatInput}
         setAdminChatInput={setAdminChatInput}
         sendAdminMessage={sendAdminMessage}
+        token={token}
+        API_URL={API_URL}
       />
 
       {/* Settings Modal config */}
@@ -1750,6 +1804,7 @@ Directives:
         model={model}
         apiBase={apiBase}
         handleSaveSettings={handleSaveSettings}
+        availableKeys={availableKeys}
       />
     </div>
   );

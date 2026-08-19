@@ -2,6 +2,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import ChatMessage from '../models/ChatMessage.js';
 import authMiddleware from '../middleware/auth.js';
+import ApiKey from '../models/ApiKey.js';
+
 
 const router = express.Router();
 
@@ -73,4 +75,28 @@ router.get('/history/:sessionId', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/chats/gemini-keys - Fetch all active Gemini API Keys
+router.get('/gemini-keys', authMiddleware, async (req, res) => {
+  try {
+    let keys = await ApiKey.find({}).sort({ createdAt: -1 });
+    
+    // Seed default key if database is empty
+    if (keys.length === 0 && process.env.GEMINI_API_KEY) {
+      console.log("Seeding default GEMINI_API_KEY from environment to database...");
+      const defaultKey = new ApiKey({
+        key: process.env.GEMINI_API_KEY,
+        label: "Default Key (Environment)"
+      });
+      await defaultKey.save();
+      keys = [defaultKey];
+    }
+    
+    res.json(keys);
+  } catch (error) {
+    console.error("Error retrieving API keys list:", error);
+    res.status(500).json({ error: "Failed to retrieve API keys list." });
+  }
+});
+
 export default router;
+

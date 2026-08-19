@@ -7,16 +7,34 @@ export default function SettingsModal({
   apiKey,
   model,
   apiBase,
-  handleSaveSettings
+  handleSaveSettings,
+  availableKeys = []
 }) {
+  const [keySource, setKeySource] = useState("custom");
   const [localKey, setLocalKey] = useState(apiKey);
   const [localModel, setLocalModel] = useState(model);
   const [localBase, setLocalBase] = useState(apiBase);
 
-  // Synchronize local state with props when they are asynchronously loaded
+  // Sync state with prop updates
   useEffect(() => {
-    setLocalKey(apiKey);
-  }, [apiKey]);
+    if (apiKey) {
+      const match = availableKeys.find(k => k.key === apiKey);
+      if (match) {
+        setKeySource(apiKey);
+      } else {
+        setKeySource("custom");
+      }
+      setLocalKey(apiKey);
+    } else {
+      if (availableKeys.length > 0) {
+        setKeySource(availableKeys[0].key);
+        setLocalKey(availableKeys[0].key);
+      } else {
+        setKeySource("custom");
+        setLocalKey("");
+      }
+    }
+  }, [apiKey, availableKeys]);
 
   useEffect(() => {
     setLocalModel(model);
@@ -30,12 +48,12 @@ export default function SettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="glass-card rounded-2xl w-full max-w-md p-6 border border-indigo-500/35 relative animate-in fade-in zoom-in duration-200">
+      <div className="glass-card rounded-2xl w-full max-w-md p-6 border border-indigo-500/35 relative animate-in fade-in zoom-in duration-200 overflow-hidden">
         <button 
           onClick={() => setShowSettings(false)}
           className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
         >
-          ✕
+          ???
         </button>
         
         <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2 border-b border-indigo-500/20 pb-3 mb-4">
@@ -46,22 +64,50 @@ export default function SettingsModal({
         <div className="p-3 mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-300 text-xs flex items-start gap-2 font-light leading-relaxed">
           <AlertCircle className="w-4.5 h-4.5 text-indigo-400 flex-shrink-0 mt-0.5" />
           <div>
-            Provide your personal Google Gemini API Key. If left empty, calculations continue to compile, but AI interpretations run in local offline rules sandbox mock mode.
+            Select an API key from the rotation list, or enter your custom key. If left empty, calculations continue to compile, but AI interpretations run in local offline mock mode.
           </div>
         </div>
 
         <div className="flex flex-col gap-4 mb-5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Gemini API Key</label>
-            <input 
-              id="apikey-input"
-              type="password" 
-              value={localKey}
-              onChange={(e) => setLocalKey(e.target.value)}
-              placeholder="AIzaSy..."
-              className="w-full glass-input rounded-lg px-3.5 py-2.5 text-sm focus:outline-none"
-            />
-          </div>
+          {availableKeys.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Select API Key Source</label>
+              <select
+                value={keySource}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setKeySource(val);
+                  if (val !== "custom") {
+                    setLocalKey(val);
+                  } else {
+                    setLocalKey("");
+                  }
+                }}
+                className="w-full glass-input rounded-lg px-3.5 py-2.5 text-sm focus:outline-none bg-white cursor-pointer"
+              >
+                {availableKeys.map((k, idx) => (
+                  <option key={idx} value={k.key}>
+                    ???? {k.label || `Key ${idx + 1}`} ({k.key.substring(0, 8)}...{k.key.substring(k.key.length - 4)})
+                  </option>
+                ))}
+                <option value="custom">?????? Enter Custom Key...</option>
+              </select>
+            </div>
+          )}
+
+          {(keySource === "custom" || availableKeys.length === 0) && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Custom Gemini API Key</label>
+              <input 
+                id="apikey-input"
+                type="password" 
+                value={localKey}
+                onChange={(e) => setLocalKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full glass-input rounded-lg px-3.5 py-2.5 text-sm focus:outline-none"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Google API Base URL</label>
@@ -110,3 +156,4 @@ export default function SettingsModal({
     </div>
   );
 }
+

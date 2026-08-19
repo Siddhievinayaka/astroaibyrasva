@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, Compass, Sparkles, Send } from 'lucide-react';
+import { ShieldAlert, Compass, Sparkles, Send, Key, Trash2 } from 'lucide-react';
 
 export default function AdminPanel({
   showAdminPanel,
@@ -14,8 +14,84 @@ export default function AdminPanel({
   adminChatMessages,
   adminChatInput,
   setAdminChatInput,
-  sendAdminMessage
+  sendAdminMessage,
+  token,
+  API_URL
 }) {
+  const [dbKeys, setDbKeys] = React.useState([]);
+  const [newKeyVal, setNewKeyVal] = React.useState("");
+  const [newKeyLabel, setNewKeyLabel] = React.useState("");
+  const [isAddingKey, setIsAddingKey] = React.useState(false);
+  const [addKeyError, setAddKeyError] = React.useState("");
+
+  const fetchDbKeys = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/apikeys`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDbKeys(data);
+      }
+    } catch (err) {
+      console.error("Error fetching db keys:", err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (showAdminPanel && token) {
+      fetchDbKeys();
+    }
+  }, [showAdminPanel, token]);
+
+  const handleAddKey = async (e) => {
+    e.preventDefault();
+    setAddKeyError("");
+    if (!newKeyVal.trim()) return;
+    
+    setIsAddingKey(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/apikeys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ key: newKeyVal, label: newKeyLabel })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDbKeys(prev => [data, ...prev]);
+        setNewKeyVal("");
+        setNewKeyLabel("");
+        alert("API Key successfully added to database!");
+      } else {
+        setAddKeyError(data.error || "Failed to add API key.");
+      }
+    } catch (err) {
+      console.error("Add key error:", err);
+      setAddKeyError("Network error.");
+    } finally {
+      setIsAddingKey(false);
+    }
+  };
+
+  const handleDeleteKey = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this API Key? Chat sessions using it will lose connection until rotated in Settings.")) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/apikeys/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setDbKeys(prev => prev.filter(k => k._id !== id));
+      }
+    } catch (err) {
+      console.error("Delete key error:", err);
+    }
+  };
+
   if (!showAdminPanel || user?.role !== 'admin') return null;
 
   return (
@@ -27,14 +103,14 @@ export default function AdminPanel({
             <ShieldAlert className="w-6 h-6 text-purple-400 animate-pulse" />
             <div>
               <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">Green AI Astrology - Admin Control Panel</h2>
-              <p className="text-[10px] text-slate-400 font-light">Monitor user live chat sessions, check registrations, and takeover chat threads.</p>
+              <p className="text-[10px] text-slate-400 font-light">Monitor live chat sessions, manage registered users, and rotate Gemini API Keys.</p>
             </div>
           </div>
           <button 
             onClick={() => { setShowAdminPanel(false); }}
             className="px-4 py-1.5 rounded-lg bg-slate-900 border border-purple-500/30 text-purple-300 hover:bg-purple-950/40 hover:text-white transition-all text-xs font-semibold"
           >
-            ✕ Close Panel
+            ??? Close Panel
           </button>
         </div>
 
@@ -47,25 +123,36 @@ export default function AdminPanel({
             <div className="flex border-b border-indigo-500/10 bg-slate-950/50">
               <button 
                 onClick={() => setAdminTab("sessions")}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border-b-2 transition-all ${
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 border-b-2 transition-all ${
                   adminTab === "sessions" 
                     ? "border-purple-500 text-purple-300 bg-purple-500/5" 
                     : "border-transparent text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Compass className="w-4 h-4" />
-                Active Sessions ({adminSessions.length})
+                <Compass className="w-3.5 h-3.5" />
+                Sessions ({adminSessions.length})
               </button>
               <button 
                 onClick={() => setAdminTab("users")}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border-b-2 transition-all ${
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 border-b-2 transition-all ${
                   adminTab === "users" 
                     ? "border-purple-500 text-purple-300 bg-purple-500/5" 
                     : "border-transparent text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Sparkles className="w-4 h-4" />
-                Registered Users ({adminUsers.length})
+                <Sparkles className="w-3.5 h-3.5" />
+                Users ({adminUsers.length})
+              </button>
+              <button 
+                onClick={() => setAdminTab("apikeys")}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 border-b-2 transition-all ${
+                  adminTab === "apikeys" 
+                    ? "border-purple-500 text-purple-300 bg-purple-500/5" 
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Key className="w-3.5 h-3.5" />
+                Keys ({dbKeys.length})
               </button>
             </div>
 
@@ -97,8 +184,8 @@ export default function AdminPanel({
                         </div>
                         {sess.user?.email && (
                           <p className="text-[10px] text-indigo-300/80 font-light flex flex-col gap-0.5">
-                            <span>📧 {sess.user.email}</span>
-                            <span>📱 {sess.user.mobile || 'N/A'}</span>
+                            <span>???? {sess.user.email}</span>
+                            <span>???? {sess.user.mobile || 'N/A'}</span>
                           </p>
                         )}
                         <p className="text-[11px] text-slate-400 truncate italic font-light">
@@ -106,14 +193,14 @@ export default function AdminPanel({
                         </p>
                         {sess.compatibilityCheck && (
                           <div className="mt-1 p-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] text-amber-300 font-light leading-tight">
-                            ❤️ Checked compatibility with: <strong>{sess.compatibilityCheck.name}</strong> ({sess.compatibilityCheck.formattedDate})
+                            ?????? Checked compatibility with: <strong>{sess.compatibilityCheck.name}</strong> ({sess.compatibilityCheck.formattedDate})
                           </div>
                         )}
                       </div>
                     );
                   })
                 )
-              ) : (
+              ) : adminTab === "users" ? (
                 adminUsers.length === 0 ? (
                   <p className="text-xs text-slate-500 text-center py-8 italic font-light">No users registered.</p>
                 ) : (
@@ -130,8 +217,8 @@ export default function AdminPanel({
                         </span>
                       </div>
                       <p className="text-[10px] text-indigo-300 font-light">
-                        📧 {u.email} <br />
-                        📱 {u.mobile}
+                        ???? {u.email} <br />
+                        ???? {u.mobile}
                       </p>
                       <div className="flex justify-between items-center text-[9px] text-slate-500 font-light mt-1">
                         <span>Role: <strong className="text-slate-400 capitalize">{u.role}</strong></span>
@@ -140,6 +227,75 @@ export default function AdminPanel({
                     </div>
                   ))
                 )
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Add Key Form */}
+                  <form onSubmit={handleAddKey} className="p-3.5 rounded-xl bg-slate-900/40 border border-purple-500/20 flex flex-col gap-3">
+                    <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center gap-1.5">
+                      <Key className="w-4 h-4 text-purple-400" />
+                      Add Gemini API Key
+                    </h4>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">API Key Value</label>
+                      <input 
+                        type="password"
+                        value={newKeyVal}
+                        onChange={(e) => setNewKeyVal(e.target.value)}
+                        placeholder="AIzaSy..."
+                        className="w-full glass-input rounded-lg px-3 py-2 text-xs focus:outline-none"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">Key Label (Optional)</label>
+                      <input 
+                        type="text"
+                        value={newKeyLabel}
+                        onChange={(e) => setNewKeyLabel(e.target.value)}
+                        placeholder="e.g. Primary Key - Flash v3.5"
+                        className="w-full glass-input rounded-lg px-3 py-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                    {addKeyError && <p className="text-[10px] text-rose-400">{addKeyError}</p>}
+                    <button 
+                      type="submit"
+                      disabled={isAddingKey}
+                      className="py-2 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {isAddingKey ? "Adding..." : "Add Key to DB"}
+                    </button>
+                  </form>
+
+                  {/* Keys list */}
+                  <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                    {dbKeys.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-6 italic font-light">No stored API keys found.</p>
+                    ) : (
+                      dbKeys.map((k, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-slate-900/40 border border-indigo-500/10 flex items-center justify-between gap-3 hover:border-purple-500/35 transition-colors">
+                          <div className="flex-1 overflow-hidden">
+                            <span className="text-xs font-semibold text-slate-200 block truncate" title={k.label || 'No Label'}>
+                              ???? {k.label || `Key ${idx + 1}`}
+                            </span>
+                            <span className="text-[9.5px] text-slate-500 font-mono block mt-0.5 truncate">
+                              {k.key.substring(0, 10)}...{k.key.substring(k.key.length - 4)}
+                            </span>
+                            <span className="text-[8px] text-slate-600 block font-mono mt-0.5">
+                              Added: {new Date(k.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteKey(k._id)}
+                            className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
+                            title="Delete Key"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -171,8 +327,8 @@ export default function AdminPanel({
                   </div>
                   {adminSelectedSession.user?.email && (
                     <p className="text-[10px] text-slate-400 font-light flex gap-3">
-                      <span>📧 {adminSelectedSession.user.email}</span>
-                      <span>📱 {adminSelectedSession.user.mobile}</span>
+                      <span>???? {adminSelectedSession.user.email}</span>
+                      <span>???? {adminSelectedSession.user.mobile}</span>
                     </p>
                   )}
                 </div>
@@ -212,7 +368,7 @@ export default function AdminPanel({
                 {/* Compatibility check highlight inside takeover */}
                 {adminSelectedSession.compatibilityCheck && (
                   <div className="px-4 py-2 bg-amber-500/10 border-t border-b border-amber-500/20 text-[10px] text-amber-300 font-light flex justify-between items-center">
-                    <span>❤️ Compatibility Search Details:</span>
+                    <span>?????? Compatibility Search Details:</span>
                     <strong>
                       {adminSelectedSession.compatibilityCheck.name} ({adminSelectedSession.compatibilityCheck.formattedDate} at {adminSelectedSession.compatibilityCheck.formattedTime}, {adminSelectedSession.compatibilityCheck.location})
                     </strong>
@@ -242,7 +398,7 @@ export default function AdminPanel({
                     <button 
                       onClick={sendAdminMessage}
                       disabled={!adminChatInput.trim()}
-                      className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50 transition-colors shadow-lg active:scale-95 flex items-center justify-center"
+                      className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50 transition-colors shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
                     >
                       <Send className="w-4.5 h-4.5" />
                     </button>
@@ -257,3 +413,4 @@ export default function AdminPanel({
     </div>
   );
 }
+
