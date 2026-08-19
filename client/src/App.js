@@ -1805,6 +1805,7 @@ Directives:
         apiBase={apiBase}
         handleSaveSettings={handleSaveSettings}
         availableKeys={availableKeys}
+        isAdmin={user?.role === 'admin'}
       />
     </div>
   );
